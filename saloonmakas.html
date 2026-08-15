@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saloon Makas | Premium Barber Experience</title>
+    <!-- Three.js ve GSAP Animasyon Kütüphaneleri -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0a0b0d;
+            --surface-dark: #121418;
+            --accent-neon: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.25);
+            --text-light: #f5f5f7;
+            --text-muted: #86868b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+        }
+
+        /* Sabit Arka Plan 3D Sahnesi */
+        #webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* İçerik Katmanları */
+        .content-layer {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 8%;
+            background: linear-gradient(to bottom, rgba(10,11,13,0.95), rgba(10,11,13,0));
+            backdrop-filter: blur(15px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .logo span {
+            color: var(--accent-neon);
+            text-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        nav a {
+            margin-left: 30px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.4s;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--text-light);
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        /* 1. BÖLÜM: Hero (Giriş) */
+        .hero {
+            display: flex;
+            align-items: center;
+            min-height: 100vh;
+            padding: 0 8%;
+            background: linear-gradient(90deg, rgba(10,11,13,0.9) 35%, rgba(10,11,13,0.2) 100%);
+        }
+
+        .hero-text {
+            max-width: 650px;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .hero-text h1 {
+            font-size: 4.8rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            letter-spacing: -2px;
+        }
+
+        .hero-text h1 span {
+            color: var(--accent-neon);
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .hero-text p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            line-height: 1.7;
+        }
+
+        .btn-premium {
+            display: inline-block;
+            background: transparent;
+            color: var(--accent-neon);
+            border: 2px solid var(--accent-neon);
+            padding: 18px 45px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .btn-premium:hover {
+            background-color: var(--accent-neon);
+            color: var(--bg-dark);
+            box-shadow: 0 0 40px var(--accent-neon);
+            transform: translateY(-3px);
+        }
+
+        /* 2. BÖLÜM: Hizmetler */
+        .section {
+            padding: 120px 8%;
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .bg-blur {
+            background: rgba(18, 20, 24, 0.85);
+            backdrop-filter: blur(25px);
+        }
+
+        .section-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 60px;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .section-title span {
+            color: var(--accent-neon);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 45px;
+            border-radius: 24px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-12px);
+            border-color: var(--accent-neon);
+            box-shadow: 0 20px 40px rgba(0, 255, 204, 0.08);
+        }
+
+        .card h3 {
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .card-meta {
+            margin-top: 30px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent-neon);
+        }
+
+        /* 3. BÖLÜM: Deneyim Ritüelleri (Süreç Ekseni) */
+        .ritual-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            max-width: 900px;
+        }
+
+        .ritual-step {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .step-num {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: rgba(0, 255, 204, 0.3);
+            line-height: 1;
+        }
+
+        .step-content h4 {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+
+        /* 4. BÖLÜM: Galeri / Portfolyo */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .gallery-item {
+            height: 350px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: flex-end;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gallery-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(10,11,13,0.9), transparent);
+            z-index: 1;
+        }
+
+        .gallery-item span {
+            position: relative;
+            z-index: 2;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* 5. BÖLÜM: İletişim & Harita */
+        .contact-layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 50px;
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .info-row {
+            margin-bottom: 30px;
+        }
+
+        .info-row label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .info-row p {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <div class="content-layer">
+        <header>
+            <div class="logo">Saloon Makas<span>.</span></div>
+            <nav>
+                <a href="#">Ana Sayfa</a>
+                <a href="#hizmetler">Hizmetler</a>
+                <a href="#rituel">Ritüeller</a>
+                <a href="#galeri">Galeri</a>
+                <a href="#iletisim">İletişim</a>
+            </nav>
+        </header>
+
+        <!-- 1. BÖLÜM -->
+        <section class="hero">
+            <div class="hero-text" id="hero-content">
+                <h1>Tarzını <br>Kusursuzca <br><span>Yansıt.</span></h1>
+                <p>Konya Selçuklu'da elit saç mimarisi ve premium bakım kültürü. Keskin hatlar ve yaşayan 3D mekanik estetiğin birleşimi.</p>
+                <a href="tel:+905531204120" class="btn-premium">Hemen Randevu Al</a>
+            </div>
+        </section>
+
+        <!-- 2. BÖLÜM -->
+        <section class="section bg-blur" id="hizmetler">
+            <h2 class="section-title">Premium <span>Hizmetler</span></h2>
+            <div class="grid-container">
+                <div class="card">
+                    <h3>Saç Mimarisi</h3>
+                    <p>Kafa yapınız ve saç yapınız analiz edilerek yapılan kişiselleştirilmiş premium kesim.</p>
+                    <div class="card-meta">350 TL</div>
+                </div>
+                <div class="card">
+                    <h3>Grooming / Sakal</h3>
+                    <p>Sakal hatlarının ustura ve özel frekanslı cihazlarla kusursuz şekilde çizilmesi.</p>
+                    <div class="card-meta">200 TL</div>
+                </div>
+                <div class="card">
+                    <h3>Dermokozmetik Bakım</h3>
+                    <p>Siyah nokta maskesi, gözenek sıkılaştırma ve canlandırıcı buhar terapisi.</p>
+                    <div class="card-meta">400 TL</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. BÖLÜM -->
+        <section class="section" id="rituel">
+            <h2 class="section-title">Hizmet <span>Ritüelleri</span></h2>
+            <div class="ritual-flow">
+                <div class="ritual-step">
+                    <div class="step-num">01</div>
+                    <div class="step-content">
+                        <h4>Konsültasyon & Analiz</h4>
+                        <p>Tıraşa başlamadan önce saçınızın doğal düşüşünü ve kemik yapınızı inceleriz.</p>
+                    </div>
+                </div>
+                <div class="ritual-step">
+                    <div class="step-num">02</div>
+                    <div class="step-content">
+                        <h4>Sıcak Havlu & Yumuşatma</h4>
+                        <p>Cildinizi ve sakallarınızı tıraşa hazırlamak için esansiyel yağlı sıcak kompres uygulaması.</p>
+                    </div>
+                </div>
+                <div class="ritual-step">
+                    <div class="step-num">03</div>
+                    <div class="step-content">
+                        <h4>Mühendislik Kesim</h4>
+                        <p>Makas ve usturanın 3D hassasiyetiyle uygulanan imza kesim tekniklerimiz.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. BÖLÜM -->
+        <section class="section bg-blur" id="galeri">
+            <h2 class="section-title">Salon <span>Portfolyo</span></h2>
+            <div class="gallery-grid">
+                <div class="gallery-item"><span>Fade Cut Classic</span></div>
+                <div class="gallery-item"><span>Beard Sharp Line</span></div>
+                <div class="gallery-item"><span>Long Trim Style</span></div>
+                <div class="gallery-item"><span>Modern Pompadour</span></div>
+            </div>
+        </section>
+
+        <!-- 5. BÖLÜM -->
+        <section class="section" id="iletisim">
+            <h2 class="section-title">Rezervasyon <span>& İletişim</span></h2>
+            <div class="contact-layout">
+                <div class="contact-info">
+                    <div class="info-row">
+                        <label>Telefon / Randevu</label>
+                        <p>+90 553 120 41 20</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Adres</label>
+                        <p>Selçuklu, Konya / Türkiye</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Çalışma Saatleri</label>
+                        <p>Pazartesi - Cumartesi: 09:00 - 21:00</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- THREE.JS: GERÇEKÇİ 3D MAKAS YAPIMI ---
+        const canvas = document.querySelector('#webgl-canvas');
+        const scene = new THREE.Scene();
+        
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 6;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Makas Grubu Oluşturma
+        const scissorGroup = new THREE.Group();
+
+        // Premium Mat Krom Malzeme
+        const chromeMaterial = new THREE.MeshStandardMaterial({
+            color: 0x22252a,
+            metalness: 0.95,
+            roughness: 0.08
+        });
+
+        // 1. Sol Bıçak Geometrisi
+        const bladeGeo = new THREE.ConeGeometry(0.12, 2.6, 4);
+        bladeGeo.scale(1, 1, 0.2); 
+        const leftBlade = new THREE.Mesh(bladeGeo, chromeMaterial);
+        leftBlade.position.y = 1.1;
+        
+        // 2. Sol Parmak Halkası
+        const ringGeo = new THREE.TorusGeometry(0.3, 0.07, 12, 48);
+        const leftRing = new THREE.Mesh(ringGeo, chromeMaterial);
+        leftRing.position.set(-0.3, -0.4, 0);
+
+        // Parçaları Gruba Ekleme
+        const leftSide = new THREE.Group();
+        leftSide.add(leftBlade);
+        leftSide.add(leftRing);
+
+        // Sağ Tarafı Oluşturma (Aynalama)
+        const rightSide = leftSide.clone();
+        rightSide.rotation.z = Math.PI; 
+        rightSide.position.set(0, 0, 0);
+
+        scissorGroup.add(leftSide);
+        scissorGroup.add(rightSide);
+        
+        // Başlangıç Pozisyonu ve Ölçeklendirme
+        scissorGroup.position.set(2.4, 0, 0);
+        scissorGroup.scale.set(1.3, 1.3, 1.3);
+        scene.add(scissorGroup);
+
+        // Işık Kurulumları
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+        scene.add(ambientLight);
+
+        const neonLight = new THREE.PointLight(0x00ffcc, 5, 20);
+        neonLight.position.set(4, 3, 4);
+        scene.add(neonLight);
+
+        const topLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        topLight.position.set(-4, 6, 3);
+        scene.add(topLight);
+
+        // Fare Etkileşimi Kontrolü
+        let mouseX = 0, mouseY = 0;
+        let targetX = 0, targetY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) - 0.5;
+            mouseY = (e.clientY / window.innerHeight) - 0.5;
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Sayfa Giriş Animasyonu
+        gsap.to("#hero-content", { opacity: 1, y: 0, duration: 1.6, ease: "power4.out" });
+
+        // Sürekli Render ve Hareket Döngüsü
+        const clock = new THREE.Clock();
+
+        const animate = () => {
+            const elapsedTime = clock.getElapsedTime();
+
+            // Makasın Kendi Ekseni Etrafında Dönüşü ve Hafif Makas Ağzı Hareketi
+            scissorGroup.rotation.y = elapsedTime * 0.3;
+            
+            // Makas ağızlarının hafifçe açılıp kapanma simülasyonu
+            leftSide.rotation.z = Math.sin(elapsedTime * 2.5) * 0.08;
+            rightSide.rotation.z = -Math.sin(elapsedTime * 2.5) * 0.08 + Math.PI;
+
+            // Fareye İnertial (Yumuşak) Tepki Verme
+            targetX = mouseX * 2.2;
+            targetY = -mouseY * 2.2;
+
+            scissorGroup.position.x += (targetX + 2.4 - scissorGroup.position.x) * 0.06;
+            scissorGroup.position.y += (targetY - scissorGroup.position.y) * 0.06;
+
+            // Neon Işığın Fareyle Birlikte Makas Üzerinde Gezinmesi
+            neonLight.position.x = 4 + targetX;
+            neonLight.position.y = 3 + targetY;
+
+            renderer.render(scene, camera);
+            window.requestAnimationFrame(animate);
+        };
+
+        animate();
+    </script>
+</body>
+</html>
